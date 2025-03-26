@@ -61,9 +61,12 @@ const getStudentSubmission = async (assignmentId, studentId, token) => {
       `${API_URL}/submit/assignments/${assignmentId}/student/${studentId}`,
       config
     );
+    console.log(response.data);
+    
     return response.data;
   } catch (error) {
     // Handle 404 specifically (no submission found)
+    console.error('Error fetching student submission:', error);
     if (error.response?.status === 404) {
       return null;
     }

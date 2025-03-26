@@ -11,22 +11,44 @@ const {
   gradeSubmission
 } = require('../controllers/submissionController');
 
-// Student submission endpoints
-// Correct submission endpoint
+// Submission routes with clear, consistent naming
 router.post(
-  '/assignments/:assignmentId/submit',
+  '/assignments/:assignmentId/submissions', // Updated to match client-side method
   protect,
   student,
   upload.single('solutionFile'),
   createOrUpdateSubmission
 );
 
+router.get(
+  '/assignments/:assignmentId/student/:studentId', 
+  protect, 
+  getStudentSubmission
+);
 
-// Other routes remain the same...
-router.get('/assignments/:assignmentId/student/:studentId', protect, getStudentSubmission);
-router.get('/assignments/:assignmentId/submissions', protect, getSubmissionsForAssignment);
-router.put('/submissions/:id/grade', protect, teacher, gradeSubmission);
-router.get('/submissions/:id', protect, getSubmissionById);
-router.get('/submissions/:id/download', protect, downloadSubmissionFile);
+router.get(
+  '/assignments/:assignmentId/submissions', 
+  protect, 
+  getSubmissionsForAssignment
+);
+
+router.put(
+  '/submissions/:id/grade', 
+  protect, 
+  teacher, 
+  gradeSubmission
+);
+
+router.get(
+  '/submissions/:id', 
+  protect, 
+  getSubmissionById
+);
+
+router.get(
+  '/submissions/:id/download', 
+  protect, 
+  downloadSubmissionFile
+);
 
 module.exports = router;

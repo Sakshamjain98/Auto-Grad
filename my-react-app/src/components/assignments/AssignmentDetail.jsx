@@ -20,9 +20,9 @@ const AssignmentDetail = () => {
         const assignmentData = await assignmentService.getAssignmentById(id, user.token);
         setAssignment(assignmentData);
         
+        // If user is a student, try to fetch submission
         if (user.role === 'student') {
           try {
-            // Fetch student's submission for this assignment
             const submissionData = await submissionService.getStudentSubmission(
               id, 
               user._id, 
@@ -30,20 +30,31 @@ const AssignmentDetail = () => {
             );
             setSubmission(submissionData);
           } catch (submissionErr) {
-            // 404 is expected if no submission exists
-            if (submissionErr.response?.status !== 404) {
-              console.error('Error fetching submission:', submissionErr);
+            // Log the error for debugging
+            console.error('Submission Fetch Error:', submissionErr);
+            
+            // If submission is not found, it's not a critical error for students
+            if (submissionErr.response?.status === 404) {
+              console.log('No existing submission for this assignment');
+              setSubmission(null);
+            } else {
+              // For other errors, set an error message
               setError('Failed to fetch submission data');
             }
+          } finally {
+            setLoading(false);
           }
+        } else {
+          // For non-student roles, stop loading
+          setLoading(false);
         }
       } catch (err) {
         console.error('Error fetching assignment:', err);
         setError(err.response?.data?.message || 'Failed to fetch assignment');
-      } finally {
         setLoading(false);
       }
     };
+    
     fetchData();
   }, [id, user.token, user.role, user._id]);
 
@@ -56,12 +67,18 @@ const AssignmentDetail = () => {
     navigate(`/assignments/${id}/submit`);
   };
 
+  // Loading state
   if (loading) return <div className="text-center py-8">Loading...</div>;
+
+  // Error state
   if (error) return <div className="text-center py-8 text-red-500">{error}</div>;
+
+  // Assignment not found
   if (!assignment) return <div className="text-center py-8">Assignment not found</div>;
 
   return (
     <div className="container mx-auto p-4">
+      {/* Assignment Details Section */}
       <div className="mb-6">
         <h2 className="text-2xl font-bold">{assignment.title}</h2>
         <p className="text-gray-600 mt-2">{assignment.description}</p>
@@ -78,11 +95,12 @@ const AssignmentDetail = () => {
         </div>
       </div>
 
+      {/* Assignment Files Section */}
       <div className="mb-6">
         <h3 className="text-xl font-semibold mb-2">Assignment Files</h3>
         <div className="flex flex-wrap gap-4">
           <a
-            href={`${process.env.REACT_APP_API_URL}/api/assignments/${assignment._id}/download/question`}
+            href={`${process.env.REACT_APP_API_URL}/api/submit/assignments/${assignment._id}/download/question`}
             download={`${assignment.title}_Questions.pdf`}
             className="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
           >
@@ -90,7 +108,7 @@ const AssignmentDetail = () => {
           </a>
           {user.role === 'teacher' && (
             <a
-              href={`${process.env.REACT_APP_API_URL}/api/assignments/${assignment._id}/download/answer`}
+              href={`${process.env.REACT_APP_API_URL}/api/submit/assignments/${assignment._id}/download/answer`}
               download={`${assignment.title}_Answers.pdf`}
               className="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
             >
@@ -100,6 +118,7 @@ const AssignmentDetail = () => {
         </div>
       </div>
 
+      {/* Teacher Submission View */}
       {user.role === 'teacher' && (
         <div className="mb-6">
           <Link
@@ -111,11 +130,45 @@ const AssignmentDetail = () => {
         </div>
       )}
 
+      {/* Student Submission Section */}
       {user.role === 'student' && (
         <div className="border-t pt-6">
           <h3 className="text-xl font-semibold mb-4">Your Submission</h3>
-          {submission ? (
-            <div className="border rounded p-4 bg-gray-50">
+          
+          {/* Submission Status Conditional Rendering */}
+          <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded">
+            <div className="flex items-center">
+              <div className="flex-shrink-0 mr-4">
+                <svg className="h-6 w-6 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-sm font-medium text-yellow-800">
+                  {submission ? 'Submission Exists' : 'Submission Required'}
+                </h3>
+                <div className="mt-2 text-sm text-yellow-700">
+                  <p>
+                    {submission 
+                      ? 'You have already submitted this assignment.' 
+                      : 'You haven\'t submitted this assignment yet. Please upload your solution.'}
+                  </p>
+                </div>
+                <div className="mt-4">
+                  <button
+                    onClick={handleSubmitClick}
+                    className="bg-red-600 text-white py-2 px-4 rounded hover:bg-red-700"
+                  >
+                    {submission ? 'Update Submission' : 'Submit Your Solution Now'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Existing Submission Details (if exists) */}
+          {submission && (
+            <div className="mt-6 border rounded p-4 bg-gray-50">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <p className="text-gray-600">
@@ -143,46 +196,12 @@ const AssignmentDetail = () => {
                 </div>
                 <div className="flex flex-col items-center">
                   <a
-                    href={`${process.env.REACT_APP_API_URL}/api/submissions/${submission._id}/download`}
+                    href={`${process.env.REACT_APP_API_URL}/api/submit/submissions/${submission._id}/download`}
                     download={`${assignment.title}_Your_Solution.pdf`}
                     className="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 mb-4"
                   >
                     Download Your Submission
                   </a>
-                  <button
-                    onClick={handleSubmitClick}
-                    className="bg-yellow-500 text-white py-2 px-4 rounded hover:bg-yellow-600"
-                  >
-                    Update Submission
-                  </button>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded">
-              <div className="flex">
-                <div className="flex-shrink-0">
-                  <svg className="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                  </svg>
-                </div>
-                <div className="ml-3">
-                  <h3 className="text-sm font-medium text-yellow-800">
-                    Submission Required
-                  </h3>
-                  <div className="mt-2 text-sm text-yellow-700">
-                    <p>
-                      You haven't submitted this assignment yet. Please upload your solution.
-                    </p>
-                  </div>
-                  <div className="mt-4">
-                    <button
-                      onClick={handleSubmitClick}
-                      className="bg-red-600 text-white py-2 px-4 rounded hover:bg-red-700"
-                    >
-                      Submit Your Solution Now
-                    </button>
-                  </div>
                 </div>
               </div>
             </div>

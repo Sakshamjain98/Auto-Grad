@@ -9,9 +9,17 @@ const path = require('path');
 // @access  Private
 const getStudentSubmission = asyncHandler(async (req, res) => {
   const { assignmentId, studentId } = req.params;
+  
+  console.log('Fetching submission with params:', {
+    assignmentId,
+    studentId,
+    requestUserRole: req.user.role,
+    requestUserId: req.user._id.toString()
+  });
 
   // Verify the requesting user has access
   if (req.user.role === 'student' && req.user._id.toString() !== studentId) {
+    console.warn('Unauthorized submission access attempt by student');
     res.status(403);
     throw new Error('Not authorized to view this submission');
   }
@@ -23,15 +31,26 @@ const getStudentSubmission = asyncHandler(async (req, res) => {
   .populate('assignment', 'title dueDate')
   .populate('student', 'name email');
 
+  console.log('Submission query result:', submission ? 'Found' : 'Not Found');
+
+  // If no submission found, return an empty array instead of throwing an error
   if (!submission) {
-    res.status(404);
-    throw new Error('Submission not found');
+    console.warn(`No submission found for Assignment: ${assignmentId}, Student: ${studentId}`);
+    return res.json([]);
   }
 
   // If teacher, verify they own the assignment
   if (req.user.role === 'teacher') {
     const assignment = await Assignment.findById(assignmentId);
-    if (assignment.teacher.toString() !== req.user._id.toString()) {
+    
+    console.log('Assignment query for teacher:', {
+      assignmentId,
+      assignmentTeacherId: assignment?.teacher.toString(),
+      requestUserId: req.user._id.toString()
+    });
+
+    if (assignment && assignment.teacher.toString() !== req.user._id.toString()) {
+      console.warn('Unauthorized teacher access attempt');
       res.status(403);
       throw new Error('Not authorized to view this submission');
     }
