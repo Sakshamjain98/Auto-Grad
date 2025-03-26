@@ -27,7 +27,7 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 // Mount routers
 app.use('/api/auth', authRoutes);
 app.use('/api/assignments', assignmentRoutes);
-app.use('/api', submissionRoutes);
+app.use('/api/submit', submissionRoutes);
 
 // Error handler middleware
 app.use(errorHandler);

@@ -1,46 +1,53 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_APPLICATION_CREDENTIALS);
+
 
 async function generateSummary(questionText, answerText, studentSolutionText) {
+   // Validate environment variables
+   if (!process.env.GEMINI_API_KEY) {
+    throw new Error('GEMINI_API_KEY is not defined in environment variables');
+  }
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+     // Initialize the Generative AI client
+     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    // For text-only input, use the gemini-pro model
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
     const prompt = `
-      You are an expert teacher evaluating a student's assignment submission.
+      Analyze the student's assignment submission:
       
-      Here is the assignment question:
+      Assignment Question:
       ${questionText}
       
-      Here is the model answer:
+      Model Answer:
       ${answerText}
       
-      Here is the student's handwritten solution (extracted text):
+      Student's Solution:
       ${studentSolutionText}
       
-      Please analyze the student's submission and provide:
-      1. A summary of the student's solution
-      2. Key points they got correct
+      Provide a detailed analysis with:
+      1. Summary of the student's approach
+      2. Key strengths
       3. Areas for improvement
-      4. Suggested feedback for the student
-      5. A percentage score estimate based on completeness and accuracy
-      
-      Format your response as follows:
-      Summary: [summary here]
-      Correct Points: [bullet points]
-      Improvements: [bullet points]
-      Feedback: [detailed feedback]
-      Score Estimate: [percentage]%
+      4. Suggested score (0-100)
+
+
+      Also Provide someresources like youtube videos, articles, etc. to help the student improve.
+      Also provide a set of questions to help the student understand the topic better.
+      also provide the learning path that helps thestudentin chart format text. 
     `;
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
-    const text = response.text();
-
-    return text;
+    return response.text();
   } catch (error) {
-    console.error('Error generating summary with Gemini:', error);
-    throw error;
+    console.error('Detailed Gemini Error:', error);
+      // Specific error handling
+      if (error.message.includes('API_KEY_INVALID')) {
+        throw new Error('Invalid Gemini API key. Please check your credentials in the environment variables.');
+      }
+  
+    throw new Error(`Failed to generate summary: ${error.message}`);
   }
 }
 

@@ -37,7 +37,7 @@ const getSubmissionsForAssignment = async (assignmentId, token) => {
 
   try {
     const response = await axios.get(
-      `${API_URL}/assignments/${assignmentId}/submissions`,
+      `${API_URL}/submit/assignments/${assignmentId}/submissions`,
       config
     );
     return response.data;
@@ -48,6 +48,30 @@ const getSubmissionsForAssignment = async (assignmentId, token) => {
     );
   }
 };
+// Get student's submission for an assignment
+const getStudentSubmission = async (assignmentId, studentId, token) => {
+  const config = {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  };
+
+  try {
+    const response = await axios.get(
+      `${API_URL}/submit/assignments/${assignmentId}/student/${studentId}`,
+      config
+    );
+    return response.data;
+  } catch (error) {
+    // Handle 404 specifically (no submission found)
+    if (error.response?.status === 404) {
+      return null;
+    }
+    throw error;
+  }
+};
+
+
 
 // Get single submission
 const getSubmissionById = async (submissionId, token) => {
@@ -116,13 +140,29 @@ const gradeSubmission = async (submissionId, gradeData, token) => {
     );
   }
 };
+const createOrUpdateSubmission = async (assignmentId, formData, token) => {
+  const config = {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'multipart/form-data',
+    },
+  };
 
+  const response = await axios.post(
+    `${API_URL}/submit/assignments/${assignmentId}/submissions`, // Correct endpoint
+    formData,
+    config
+  );
+  return response.data;
+};
 const submissionService = {
+  createOrUpdateSubmission,
   createSubmission,
   getSubmissionsForAssignment,
   getSubmissionById,
   downloadSubmissionFile,
   gradeSubmission,
+  getStudentSubmission
 };
 
 export default submissionService;
