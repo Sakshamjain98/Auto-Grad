@@ -29,6 +29,7 @@ router.get(
 router.get(
   '/assignments/:assignmentId/submissions', 
   protect, 
+  teacher,
   getSubmissionsForAssignment
 );
 

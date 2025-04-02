@@ -191,24 +191,45 @@ const createOrUpdateSubmission = asyncHandler(async (req, res) => {
 // @desc    Get submissions for an assignment (teacher view)
 // @route   GET /api/assignments/:id/submissions
 // @access  Private/Teacher
+// @desc    Get submissions for an assignment (teacher view)
+// @route   GET /api/assignments/:assignmentId/submissions
+// @access  Private/Teacher
 const getSubmissionsForAssignment = asyncHandler(async (req, res) => {
-  const assignment = await Assignment.findById(req.params.id);
+  const { assignmentId } = req.params;
 
+  const assignment = await Assignment.findById(assignmentId);
   if (!assignment) {
     res.status(404);
     throw new Error('Assignment not found');
   }
 
   // Check if the requesting teacher is the owner of the assignment
-  if (assignment.teacher.toString() !== req.user._id.toString()) {
+  if (req.user.role !== 'teacher' || assignment.teacher.toString() !== req.user._id.toString()) {
     res.status(403);
     throw new Error('Not authorized to view submissions for this assignment');
   }
 
-  const submissions = await Submission.find({ assignment: assignment._id })
-    .populate('student', 'name email');
+  const submissions = await Submission.find({ assignment: assignmentId })
+    .populate('student', 'name email _id')
+    .sort({ submittedAt: -1 }); // Sort by most recent first
 
-  res.json(submissions);
+  // Format the response to include student details properly
+  const formattedSubmissions = submissions.map(sub => ({
+    _id: sub._id,
+    student: {
+      _id: sub.student._id,
+      name: sub.student.name,
+      email: sub.student.email
+    },
+    solutionFile: sub.solutionFile,
+    extractedText: sub.extractedText,
+    summary: sub.summary,
+    submittedAt: sub.submittedAt,
+    grade: sub.grade,
+    feedback: sub.feedback
+  }));
+
+  res.json(formattedSubmissions);
 });
 
 // @desc    Get submission by ID
