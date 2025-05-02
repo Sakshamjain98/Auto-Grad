@@ -4,8 +4,10 @@ const { protect, teacher } = require('../middleware/auth');
 const upload = require('../middleware/upload');
 const {
   createAssignment,
+  createCodingAssignment,
   getAssignments,
   getAssignmentById,
+  getCodingAssignmentById,
   downloadAssignmentFile,
 } = require('../controllers/assignmentController');
 
@@ -18,6 +20,16 @@ router.route('/')
 
 router.route('/:id')
   .get(protect, getAssignmentById);
+
+router.route('/coding/:id')
+  .get(protect, getCodingAssignmentById);
+
+router.route('/coding')
+  .post(protect, teacher, createCodingAssignment);
+
+router.route('/coding/:id/attempt/submit')
+  .post(protect, evaluateCodingAssignment);
+
 
 router.get('/:id/download/:fileType', protect, downloadAssignmentFile);
 

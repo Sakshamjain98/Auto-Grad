@@ -74,7 +74,7 @@ const AssignmentList = () => {
 
   if (error) {
     return (
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         className="flex items-center justify-center min-h-screen bg-gray-50"
@@ -82,7 +82,7 @@ const AssignmentList = () => {
         <div className="bg-red-50 text-red-700 p-6 rounded-lg shadow-md max-w-md">
           <h2 className="text-xl font-bold mb-2">Error</h2>
           <p>{error}</p>
-          <button 
+          <button
             onClick={() => window.location.reload()}
             className="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
           >
@@ -122,11 +122,11 @@ const AssignmentList = () => {
         className="container mx-auto max-w-4xl z-10 relative"
       >
         {/* Header section with gradient background */}
-        <motion.div 
+        <motion.div
           variants={itemVariants}
           className="bg-white rounded-xl shadow-lg overflow-hidden mb-8"
         >
-          <div className="p-6 text-white relative" 
+          <div className="p-6 text-white relative"
             style={{ background: 'linear-gradient(90deg, #6820C6 0%, #6563FF 65.5%, #AB04B7 100%)' }}>
             <div className="flex items-center justify-between">
               <div className="flex items-center">
@@ -135,7 +135,7 @@ const AssignmentList = () => {
                 </div>
                 <h2 className="text-2xl font-bold">Assignments</h2>
               </div>
-              
+
               {user.role === 'teacher' && (
                 <motion.div
                   whileHover={{ scale: 1.05 }}
@@ -156,7 +156,7 @@ const AssignmentList = () => {
 
         {/* Assignment list */}
         {assignments.length === 0 ? (
-          <motion.div 
+          <motion.div
             variants={itemVariants}
             className="bg-white rounded-xl p-8 text-center shadow-lg"
           >
@@ -165,7 +165,7 @@ const AssignmentList = () => {
             </div>
             <h3 className="text-xl font-semibold text-gray-800 mb-2">No assignments found</h3>
             <p className="text-gray-600">
-              {user.role === 'teacher' 
+              {user.role === 'teacher'
                 ? "Create your first assignment by clicking the 'Create Assignment' button above."
                 : "There are no assignments available for you at the moment."}
             </p>
@@ -173,8 +173,8 @@ const AssignmentList = () => {
         ) : (
           <div className="space-y-4">
             {assignments?.map((assignment) => (
-              <motion.div 
-                key={assignment._id} 
+              <motion.div
+                key={assignment._id}
                 variants={itemVariants}
                 whileHover={{ y: -5, transition: { duration: 0.2 } }}
                 className="bg-white border border-purple-100 rounded-xl p-6 shadow-md hover:shadow-lg"
@@ -187,7 +187,6 @@ const AssignmentList = () => {
                       </h3>
                     </Link>
                     <p className="text-gray-600 mt-2 mb-4">{assignment.description}</p>
-                    
                     <div className="flex flex-wrap items-center text-sm text-gray-500 mt-2 space-x-4">
                       <div className="flex items-center">
                         <FaUser className="text-purple-400 mr-2" />
@@ -197,32 +196,64 @@ const AssignmentList = () => {
                         <FaCalendarAlt className="text-purple-400 mr-2" />
                         <span>Due: {formatDate(assignment.dueDate)}</span>
                       </div>
+                      {/* Assignment type label */}
+                      <div className="flex items-center mt-2 md:mt-0">
+                        <span className={`ml-2 px-2 py-1 rounded text-xs font-semibold 
+                ${assignment.assignmentType === 'coding'
+                            ? 'bg-blue-100 text-blue-700'
+                            : 'bg-green-100 text-green-700'}`}>
+                          {assignment.assignmentType === 'coding' ? 'Coding Assignment' : 'Text Assignment'}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                  
+
+                  {/* Action buttons */}
                   <div className="flex flex-col space-y-2 mt-4 md:mt-0 md:ml-4">
-                    <motion.a
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      href={`${process.env.REACT_APP_API_URL}/api/assignments/${assignment._id}/download/question`}
-                      download
-                      className="flex items-center justify-center bg-purple-100 text-purple-700 py-2 px-4 rounded-lg hover:bg-purple-200 transition-colors"
-                    >
-                      <FaDownload className="mr-2" />
-                      <span>Download Questions</span>
-                    </motion.a>
-                    
-                    {user.role === 'teacher' && (
-                      <motion.a
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        href={`${process.env.REACT_APP_API_URL}/api/assignments/${assignment._id}/download/answer`}
-                        download
-                        className="flex items-center justify-center bg-purple-100 text-purple-700 py-2 px-4 rounded-lg hover:bg-purple-200 transition-colors"
-                      >
-                        <FaDownload className="mr-2" />
-                        <span>Download Answers</span>
-                      </motion.a>
+                    {assignment.assignmentType === "coding" ? (
+                      <>
+                        {user.role === "student" && (
+                          <Link
+                            to={`/assignments/coding/${assignment._id}/attempt`}
+                            className="flex items-center justify-center bg-blue-100 text-blue-700 py-2 px-4 rounded-lg hover:bg-blue-200 transition-colors font-semibold"
+                          >
+                            Attempt
+                          </Link>
+                        )}
+                        {user.role === "teacher" && (
+                          <Link
+                            to={`/assignments/coding/${assignment._id}/view`}
+                            className="flex items-center justify-center bg-blue-100 text-blue-700 py-2 px-4 rounded-lg hover:bg-blue-200 transition-colors font-semibold"
+                          >
+                            View
+                          </Link>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        <motion.a
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          href={`${process.env.REACT_APP_API_URL}/api/assignments/${assignment._id}/download/question`}
+                          download
+                          className="flex items-center justify-center bg-purple-100 text-purple-700 py-2 px-4 rounded-lg hover:bg-purple-200 transition-colors"
+                        >
+                          <FaDownload className="mr-2" />
+                          <span>Download Questions</span>
+                        </motion.a>
+                        {user.role === 'teacher' && (
+                          <motion.a
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            href={`${process.env.REACT_APP_API_URL}/api/assignments/${assignment._id}/download/answer`}
+                            download
+                            className="flex items-center justify-center bg-purple-100 text-purple-700 py-2 px-4 rounded-lg hover:bg-purple-200 transition-colors"
+                          >
+                            <FaDownload className="mr-2" />
+                            <span>Download Answers</span>
+                          </motion.a>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>
