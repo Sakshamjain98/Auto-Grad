@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5000/api/assignments';
+const API_URL = 'http://localhost:3000/api/assignments';
 
 // Create new assignment
 const createAssignment = async (assignmentData, token) => {

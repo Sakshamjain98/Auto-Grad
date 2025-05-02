@@ -1,7 +1,7 @@
 const express = require('express');
 const dotenv = require('dotenv');
 const colors = require('colors');
-const cors = require('cors');
+
 const path = require('path');
 const connectDB = require('./config/db');
 const { errorHandler } = require('./middleware/errorMiddleware');
@@ -19,7 +19,12 @@ const app = express();
 
 // Middleware
 app.use(express.json());
-app.use(cors());
+const cors = require('cors');
+
+app.use(cors({
+  origin: ['http://localhost:5173', 'https://your-production-url.com'], // Add your production URL here
+}));
+
 
 // Make uploads folder static
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
@@ -32,7 +37,7 @@ app.use('/api/submit', submissionRoutes);
 // Error handler middleware
 app.use(errorHandler);
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`.yellow.bold);

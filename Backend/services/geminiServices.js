@@ -34,11 +34,29 @@ async function generateSummary(questionText, answerText, studentSolutionText) {
 
       Also Provide someresources like youtube videos, articles, etc. to help the student improve.
       Also provide a set of questions to help the student understand the topic better.
-      also provide the learning path that helps thestudentin chart format text. 
+      give thumbnails for the resources and questions.
+      provide mermaid code for learning path.
+      Provide the response in JSON format with the following keys:
+      {
+        "summaryText": "Summary of the student's approach",
+        "strengths": "Key strengths",
+        "improvements": "Areas for improvement",
+        "score": "Suggested score (0-100)",
+        "resources": [
+          {
+            "title": "Resource Title",
+            "url": "https://example.com/resource",
+            "thumbnail": "https://example.com/thumbnail.jpg"
+          }
+        ],
+      
+
     `;
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
+    console.log(result);
+    console.log(response.json());
     return response.text();
   } catch (error) {
     console.error('Detailed Gemini Error:', error);
